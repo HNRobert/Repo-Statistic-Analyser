@@ -9,18 +9,51 @@ NC='\033[0m'
 
 # Parse command line arguments
 MAX_FILES=""
+TARGET_PATH=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         -l)
             MAX_FILES="$2"
             shift 2
             ;;
+        -p)
+            TARGET_PATH="$2"
+            shift 2
+            ;;
         *)
-            echo "Usage: $0 [-l <max-file-count>]"
-            exit 1
+            # If it's not a flag, treat as path
+            if [[ -z "$TARGET_PATH" && -d "$1" ]]; then
+                TARGET_PATH="$1"
+                shift
+            else
+                echo "Usage: $0 [-l <max-file-count>] [-p <path>] [path]"
+                echo "  -l: Limit number of files to display"
+                echo "  -p: Target directory path"
+                echo "  path: Target directory path (alternative to -p)"
+                exit 1
+            fi
             ;;
     esac
 done
+
+# Change to target directory if specified
+if [[ -n "$TARGET_PATH" ]]; then
+    if [[ ! -d "$TARGET_PATH" ]]; then
+        echo -e "${RED}Error: Directory '$TARGET_PATH' does not exist${NC}"
+        exit 1
+    fi
+    cd "$TARGET_PATH" || {
+        echo -e "${RED}Error: Cannot change to directory '$TARGET_PATH'${NC}"
+        exit 1
+    }
+    echo -e "${CYAN}Analyzing repository in: ${BOLD}$(pwd)${NC}"
+fi
+
+# Check if we're in a git repository
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo -e "${RED}Error: Not in a git repository${NC}"
+    exit 1
+fi
 
 echo -e "${YELLOW}-----------------------------------------${NC}"
 echo -e "${YELLOW}|${CYAN}  Git Tracked File Line Count Summary  ${YELLOW}|${NC}"
