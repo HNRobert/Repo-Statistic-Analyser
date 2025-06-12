@@ -46,7 +46,7 @@ if [[ -n "$TARGET_PATH" ]]; then
         echo -e "${RED}Error: Cannot change to directory '$TARGET_PATH'${NC}"
         exit 1
     }
-    echo -e "${CYAN}Analyzing repository in: ${BOLD}$(pwd)${NC}"
+    # echo -e "${CYAN}Analysing repository in: ${BOLD}$(pwd)${NC}"
 fi
 
 # Check if we're in a git repository
@@ -55,9 +55,17 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     exit 1
 fi
 
-echo -e "${YELLOW}-----------------------------------------${NC}"
+# Get repository name
+REPO_NAME=$(basename "$(git rev-parse --show-toplevel)")
+
+# Get current branch name
+BRANCH_NAME=$(git branch --show-current)
+
+echo -e "\n${YELLOW}-----------------------------------------${NC}"
 echo -e "${YELLOW}|${CYAN}  Git Tracked File Line Count Summary  ${YELLOW}|${NC}"
-echo -e "${YELLOW}-----------------------------------------${NC}"
+echo -e "${YELLOW}-----------------------------------------${NC}\n"
+echo -e "${GREEN}${BOLD}Repository: ${REPO_NAME}${NC}${YELLOW}$(printf "%*s" $((29 - ${#REPO_NAME})) "")${NC}"
+echo -e "${GREEN}${BOLD}Branch: ${BRANCH_NAME}${NC}${YELLOW}$(printf "%*s" $((31 - ${#BRANCH_NAME})) "")${NC}\n"
 
 git ls-files -z | xargs -0 wc -l | tee /tmp/wc_output | awk -v GREEN="$GREEN" -v BOLD="$BOLD" -v NC="$NC" -v MAX_FILES="$MAX_FILES" '
     BEGIN {
@@ -89,7 +97,7 @@ git ls-files -z | xargs -0 wc -l | tee /tmp/wc_output | awk -v GREEN="$GREEN" -v
             printf "%s%6d%s %s\n", GREEN, parts[1], NC, parts[2]
         }
         
-        printf "\n%sTotal files:%s %s%d%s\n", BOLD, NC, GREEN, count, NC
-        printf "%sTotal lines:%s %s%d%s\n", BOLD, NC, GREEN, total, NC
+        printf "\n%sTotal files:%s %s%s%d%s\n", BOLD, NC, GREEN, BOLD, count, NC
+        printf "%sTotal lines:%s %s%s%d%s\n", BOLD, NC, GREEN, BOLD, total, NC
     }
 '
